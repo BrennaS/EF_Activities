@@ -1,3 +1,6 @@
+---
+output: word_document
+---
 Exercise 2: From Models to Forecasts
 ========================================================
 
@@ -33,7 +36,7 @@ plot(time,n,ylim=c(0,12),lwd=3,type='l',
 ### Problems
 
 1. Generate plots of the logistic growth model at r = 1.95, 2.05, 2.5, and 2.8 Describe the trajectory observed in each case.
-
+#For the growth rate of r=1.95, the rise is slightly steeper than the standard logistic growth until it reaches the carrying capacity, when the data begins to oscillate around the carrying capacity. As the growth rate rises, the oscillations get larger and less even, and the inital growth curve gets steeper as well. 
 
 Probability distributions in R
 ------------------------------
@@ -138,6 +141,11 @@ This example demonstrates that as the number of random draws from a probability 
 ### Problems
 
 2. Choose another probability distribution and generate graphs of the probability density function, the cumulative distribution function, the quantile function, and a histogram of samples from that distribution.
+#plot(x,dbinom(x,15,0.4),type='l')
+#plot(q,pbinom(q,15,0.4),type='l')
+#plot(p,qbinom(p,15,0.4),type='l')
+# for(i in 1:4){hist(rbinom(n[i],15,0.4),main=n[i],probability=TRUE,breaks=40) 
+#  +lines(x,dbinom(x,15,0.4),col=2)}
 
 Monte Carlo Simulation
 ----------------------
@@ -170,6 +178,7 @@ It turns out that this specific transformation (x^2 of a standard Normal), has a
 ### Problems
 
 3. Numerically transform a lognormal(meanlog=0,sdlog=0.05) through exp(x) using Monte Carlo simulation. Include histograms of the original and transformed distributions. Report the mean, median, and 95% CI for both distributions and indicate these values on the histograms.
+
 
 Parameter error
 ---------------
@@ -204,21 +213,26 @@ n.stats = apply(n,2,quantile,c(0.025,0.5,0.975))
 
 Unfortunately, R doesn't have a built in function for plotting shaded CI on time-series plots, so we'll define one. Unlike plot, which just takes x and y as arguements, this function need to take time-series for both the upper (yhi) and lower (ylo) intervals.
 ```{r}
-ciEnvelope <- function(x,ylo,yhi,col="lightgrey",...){
+ ciEnvelope <- function(x,ylo,yhi,col="lightgrey",...){
   polygon(cbind(c(x, rev(x), x[1]), c(ylo, rev(yhi),
-  ylo[1])), border = NA,...) 
+  ylo[1])), border = NA,col=col,...) 
 }
 ```
 
 ### Problems
 
 4. Plot histograms of the samples of r and K used for the simulation.
+#hist(KE)
+#hist(rE)
 
 5. Plot a sample of 10 different trajectories from your ensemble (on one graph).
+#matplot(n[1:30,1:10], type='l', pch=1, xlab='Time', ylab='Population')
 
 6. Plot a histogram of your population forecast at time = 15.
+#hist(n[15,], breaks=40)
 
 7. Plot the median trajectory and 95% CI.
+
 
 8. Add a 50% CI (i.e. 25% to 75%) to the plot. Note that you'll have to both compute the summary statistics for this interval and plot the envelope in a different color.
 

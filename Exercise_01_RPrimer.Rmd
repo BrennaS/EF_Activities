@@ -101,8 +101,8 @@ y
 The number [1] before the answers just means that this item is the first element of a vector (vectors can be thought of as a collection of related values, such as a column in a data table). From these examples we can see a few things about R. First is that it knows the value of common constants (e.g. π) and can use them like numbers. Second, that we can assign both constants and the results of functions to variables and we can see the value of a variable by entering it at the command prompt. This also demonstrates “sqrt”, the square root function, and that values are passed to functions within parenthesis.  Typically, values passed to function are referred to as the arguments of the functions. Make sure you understand what each operator (+, -, *, /, %%, %/%) does before you proceed.  Some of the other common mathematical operators in R that you should try running are:
 
 ```
-10^2  			        ## power
-exp(1)				      ## exponential
+10^2                ## power
+exp(1)              ## exponential
 log(10)			        ## natural logarithm (i.e. ln)
 log10(10)			      ## log base 10
 log2(10)            ## log base 2
@@ -139,18 +139,37 @@ Packages are installed using the ‘Install Packages’ button under the “Pack
 ```
 1.	Evaluate the following:
    a.	ln(1)
+   #0
    b.	ln(0)
+   #-Inf
    c.	ln(e)
+   #1
    d.	ln(-5)
+   #NaN
    e.	-ln(5)
+   #-1.609
    f.	ln(1/5)
+   #-1.609
+   
 g.	How does R represent when the output of a function is not a number?
-2.	Why are we multiplying the results of the atan and atan2 functions by 180/pi? 
-3.	How is the atan2 function different from the atan function? 
+#It gives eiter Nan or Inf
+2.	Why are we multiplying the results of the atan and atan2 functions by 180/pi?
+#It turns the output of the function into degrees
+3.	How is the atan2 function different from the atan function?
+#atan2 takes two arguments, both an x and y component
 4.	What is the difference between log and log10?
+#log is the natural log, with a base of e, while log10 is a logarithm with a base #10
 5.	Given a right triangle with sides x = 5 and y = 13, calculate the length of the hypotenuse (show code)
+#>   x=5
+#> y=13
+#> sqrt(x^2+y^2)
+#13.92839
 6.	If a population starts with a density of 5 individuals/hectare and grows exponentially at a growth rate r=0.04/year, what is the size of the population in π years? (show code)
+#> 5*exp(1)^(0.04*pi)
+#[1] 5.669504
 7.	Subtract the month you were born from the remainder left after you divide the year you were born by the day you were born (show code)
+#> 1994%%27-10
+#[1] 13
 ```
 
 
@@ -195,11 +214,21 @@ prod(1:10)		## product of values in a vector
 ```
 Questions:
 8.	Describe the difference in output between sum and cumsum.
+#sum gives the sum of two numbers that are next to each other in teh vector, and cumsum gives the sume of all the values in the vector
 9.	Generate a sequence of even numbers from -6 to 6
+#> seq(-6,6,by=2)
+#[1] -6 -4 -2  0  2  4  6
 10.	Generate a sequence of values from -4.8 to -3.43 that is length 8 (show code)
 a.	What is the difference between values in this sequence?
+#> x<-seq(-4.8,-3.43, length=8)
+#> diff(x)
+#[1] 0.1957143 0.1957143 0.1957143 0.1957143 0.1957143 0.1957143 0.1957143
 b.	What is the sum of the exponential of this sequence?
+#> sum(exp(x))
+#[1] 0.144133
 11.	Calculate a second difference [a difference of differences] for the sequence 1:10 (show code)
+#> diff(diff(seq(1:10)))
+#[1] 0 0 0 0 0 0 0 0
 ```
 
 ## Loading and Saving Data
@@ -258,6 +287,11 @@ Within the Environment window, clicking on a variable will show you the contents
 ```
 12.	Save the frog data file delimited in a pipe-delimited format (i.e. separated by ‘|’). Open the file up in a text editor and cut-and-paste the first few lines of the file into your Rscript file (just so I can see what you did).  Load the data back up into R as ‘dat2’ (show code)
 ```
+#"frogs"|"tadpoles"|"color"|"spots"
+#"1"|1.1|2.03698175474231|"red"|TRUE
+#"2"|1.3|2.87623092770957|"red"|FALSE
+
+#dat2=read.table("data/Lab1_frogs.txt", header=TRUE, sep="|")
 
 
 ## Data types and dimensions
@@ -331,8 +365,25 @@ as.matrix(dat)
 
 ``` 
 13.	Show just the spots data as characters
+#> as.character(dat$spots)
+#[1] "TRUE"  "FALSE" "TRUE"  "FALSE" "TRUE"  "FALSE" "TRUE"  "FALSE" "TRUE"  #"FALSE"
+#[11] "TRUE"  "FALSE" "TRUE"  "FALSE" "TRUE"  "FALSE" "TRUE"  "FALSE" "TRUE"  #"FALSE"
+
 14.	Show the 3rd through 8th rows of the 1st  though 3rd columns
+#> dat[3:8,1:3]
+#  frogs tadpoles color
+#3   1.7 3.062528   red
+#4   1.8 3.707180   red
+#5   1.9 3.955385   red
+#6   2.1 4.786983   red
+#7   2.3 4.909395   red
+#8   2.4 4.743633  blue
+
+
 15.	Show the first 3 rows
+#> dat[3,]
+#  frogs tadpoles color spots
+#3   1.7 3.062528   red  TRUE
 ```
 
 ## Combining vectors
@@ -367,7 +418,14 @@ rbind(q,p)		# bind as rows
    
 ```
 16.	Create a character vector that contains the names of 4 super heros.
+#> x<-c("superman", "aquaman", "daredevil", "storm")
+#> as.character(x)
+#[1] "superman"  "aquaman"   "daredevil" "storm"    
+
 17.	Show just the odd numbered rows in the frog data. Write this code for the GENERAL CASE (i.e. don’t just type c(1,3,5,…) but use functions that you learned in previous sections to set up the sequence.
+
+#> y<-seq(1, length=10, by=2)
+#> dat[y,]
 ```
 
 ## Logical operators and indexing
@@ -474,11 +532,50 @@ as.numeric(y>13)
 ``` 
 18.	For the frog data set: 
   a.	display just the rows where frogs have spots
+  #> subset(dat,spots=="TRUE")
+  
   b.	display just the rows where frogs are blue
+  #> subset(dat,color=="blue")
+  
   c.	how many blue tadpoles are there?
-  d.	create a new object containing just the rows where there are between 3 and 5 tadpoles
+  #> sum(subset(dat,color=="blue",c("tadpoles")))
+  #[1] 77.70381
+  
+  d.	create a new object containing just the rows where there are between 3 and   5 tadpoles
+#> subset(dat,tadpoles<=5 & tadpoles>=3,)
+#  frogs tadpoles color spots
+#3   1.7 3.062528   red  TRUE
+#4   1.8 3.707180   red FALSE
+#5   1.9 3.955385   red  TRUE
+#6   2.1 4.786983   red FALSE
+#7   2.3 4.909395   red  TRUE
+#8   2.4 4.743633  blue FALSE
+
   e.	display just the rows where there are less than 2.5 red frogs
+#> subset(dat, frogs<2.5 & color=="red")
+#  frogs tadpoles color spots
+#1   1.1 2.036982   red  TRUE
+#2   1.3 2.876231   red FALSE
+#3   1.7 3.062528   red  TRUE
+#4   1.8 3.707180   red FALSE
+#5   1.9 3.955385   red  TRUE
+#6   2.1 4.786983   red FALSE
+#7   2.3 4.909395   red  TRUE  
+  
   f.	display where either frogs do not have spots or there are more than 5 frogs
+#> subset(dat, frogs>5 | spots==FALSE)
+#   frogs tadpoles color spots
+#2    1.3 2.876231   red FALSE
+#4    1.8 3.707180   red FALSE
+#6    2.1 4.786983   red FALSE
+#8    2.4 4.743633  blue FALSE
+#10   2.8 5.488370  blue FALSE
+#12   3.3 6.202578  blue FALSE
+#14   3.7 6.666590   red FALSE
+#16   4.1 8.103331  blue FALSE
+#18   4.8 9.629233  blue FALSE
+#19   5.1 9.791165  blue  TRUE
+#20   5.3 9.574846  blue FALSE  
 ```
 ## Plots, tables, and exploratory analysis
 
@@ -541,10 +638,15 @@ Within the Plot window, graphs can be cut-and-pasted into other documents or sav
 
   19.	Plot the following lines from 0 to 3 (hint: define x as a sequence with a small step size). Make sure to make the resolution of x sufficiently small to see the curves
    a.	ln(x)
+#> plot(log(x))   
    b. $e^{-x}$
+#> plot(exp(-x))   
   20.	Make a barplot of the median number of frogs grouped by whether they have spots or not.
+#> barplot(tapply(dat$frogs,dat$spots, median))  
   21.	Plot a histogram of blue frogs
+#> hist(dat$frogs[dat$color=="blue"])  
   22.	Use apply to calculate the across-population standard deviations in the numbers of frogs and tadpoles
+#> apply(dat[,1:2],2,sd)  
 
 ## Classical tests
 
@@ -599,8 +701,16 @@ legend("topleft",
 ``` 
 23.	Using the frog data
   a.	Fit a linear model of tadpoles as a function of frogs for just the RED individuals and report the summary data of the fit.  
+#> y<-subset(dat,color=="red")
+#reg2=lm(tadpoles~frogs,data=y)
+#summary(reg2)
+
   b.	Make a scatter plot of this data that includes the regression line
+#> plot(y$frogs,y$tadpoles)
+#> abline(reg2) 
+
   c.	Fit a series of linear models of tadpoles as a function of frogs, spots, color, and their interaction terms. Build up from a simple model to the most complex model that is supported by the available data (i.e. all terms should be significant). Also test the full model that includes all variables and interaction terms.
+#Done  
 ```
 
 ## IF statements
@@ -650,6 +760,7 @@ Aside: As is very common in R, as we learn more we often find more efficient way
 
 ```
 24.	Write an if statement that makes a scatter plot of x if all the values are positive, and plots a histogram otherwise.
+> if(all(x>0)){plot(x)}else{hist(x)}
 ```
 
 ## Defining custom functions
@@ -685,6 +796,14 @@ my.division(x,"5")
  
 ```
 25.	Convert the more complicated graphing example at the end of  “Classic Tests” into a function that will make the same plots for any data set. Show how you would call the function passing it just the subset of data where there are 5 or more tadpoles.
+
+#> plotting=function(x,y){lm(y~x)
+#+     plot(lm(y~x))
+#+     abline(x,y)
+#+     return(summary(x,y))
+#+     }
+
+#> plotting(dat$tadpoles[dat$tadpoles>=5],dat$frogs[dat$tadpoles>=5])
 ```
 
 ## For loops
@@ -721,7 +840,19 @@ plot(N)
 
 ```
 26.	Starting with a vector x = 1:10, write a for loop that adds 5 to each value in the vector. Note that it is permissible to assign an element in a vector to itself (e.g. x[i] = x[i] + 5)
+#> for(i in 1:10){ 
+#+     print(i+5)}
+
 27.	Modify the logistic growth code to simulate discrete-time exponential growth and plot the output.
+#> NT = 100  		## number of time steps
+#> N0 = 1				## initial population size
+#> r = 1.2				## population growth rate
+#> K = 10				## carrying capacity
+#> N = rep(N0,NT)
+#> for(t in 2:NT){
+#+     N[t] = r^t*N0    
+#+ }
+#> plot(N)
 ```
 
 ## Vector and Matrix Math
