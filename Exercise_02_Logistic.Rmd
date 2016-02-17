@@ -1,5 +1,5 @@
 ---
-output: word_document
+output: html_document
 ---
 Exercise 2: From Models to Forecasts
 ========================================================
@@ -36,7 +36,30 @@ plot(time,n,ylim=c(0,12),lwd=3,type='l',
 ### Problems
 
 1. Generate plots of the logistic growth model at r = 1.95, 2.05, 2.5, and 2.8 Describe the trajectory observed in each case.
+```{r}
+r=1.95
+plot(time,n,ylim=c(0,12),lwd=3,type='l',
+     ,bty='l',cex.lab=1.5,
+      xlab="Time",ylab="Population Size")
+
+r=2.05
+plot(time,n,ylim=c(0,12),lwd=3,type='l',
+     ,bty='l',cex.lab=1.5,
+      xlab="Time",ylab="Population Size")
+
+r=2.5
+plot(time,n,ylim=c(0,12),lwd=3,type='l',
+     ,bty='l',cex.lab=1.5,
+      xlab="Time",ylab="Population Size")
+
+r=2.8
+plot(time,n,ylim=c(0,12),lwd=3,type='l',
+     ,bty='l',cex.lab=1.5,
+      xlab="Time",ylab="Population Size")
+
 #For the growth rate of r=1.95, the rise is slightly steeper than the standard logistic growth until it reaches the carrying capacity, when the data begins to oscillate around the carrying capacity. As the growth rate rises, the oscillations get larger and less even, and the inital growth curve gets steeper as well. 
+
+```
 
 Probability distributions in R
 ------------------------------
@@ -141,11 +164,17 @@ This example demonstrates that as the number of random draws from a probability 
 ### Problems
 
 2. Choose another probability distribution and generate graphs of the probability density function, the cumulative distribution function, the quantile function, and a histogram of samples from that distribution.
-#plot(x,dbinom(x,15,0.4),type='l')
-#plot(q,pbinom(q,15,0.4),type='l')
-#plot(p,qbinom(p,15,0.4),type='l')
-# for(i in 1:4){hist(rbinom(n[i],15,0.4),main=n[i],probability=TRUE,breaks=40) 
-#  +lines(x,dbinom(x,15,0.4),col=2)}
+```{r}
+x<-seq(1,10, by=1)
+plot(x,dbinom(x,15,0.4),type='l') 
+q<-seq(1,10,by=1)
+plot(q,pbinom(q,15,0.4),type='l')
+plot(p,qbinom(p,15,0.4),type='l') 
+for(i in 1:4){hist(rbinom(n[i],15,0.4),main=n[i],probability=TRUE,breaks=40) 
+lines(x,dbinom(x,15,0.4),col=2)}
+
+```
+
 
 Monte Carlo Simulation
 ----------------------
@@ -178,7 +207,21 @@ It turns out that this specific transformation (x^2 of a standard Normal), has a
 ### Problems
 
 3. Numerically transform a lognormal(meanlog=0,sdlog=0.5) through sin(x) using Monte Carlo simulation. Include histograms of the original and transformed distributions. Report the mean, median, and 95% CI for both distributions and indicate these values on the histograms.
+```{r}
+x=rlnorm(x,meanlog=0,sdlog=1)
+y=sin(x)
+hist(x,main="Original distribution",breaks=40)
+abline(v=quantile(x,c(0.025,0.5,0.975)),lty=c(2,1,2),col=2)
+abline(v=mean(x),col=3,lwd=3,lty=3)
+legend('topright', legend=c("Median:1.65 ", "Mean:0.997","95%CI:0.142-7.197"),
+   col=c(3,2,2), lty=2:1, cex=0.8)
 
+hist(y,main="Transformed distribution",breaks=40)
+abline(v=quantile(y,c(0.025,0.5,0.975)),lty=c(2,1,2),col=2)
+abline(v=mean(y),col=3,lwd=3,lty=3)
+legend('topright', legend=c("Median:0.472 ", "Mean:0.558","95%CI:-0.945-0.999"),
+   col=c(3,2,2), lty=2:1, cex=0.8)
+```
 
 Parameter error
 ---------------
@@ -222,19 +265,45 @@ Unfortunately, R doesn't have a built in function for plotting shaded CI on time
 ### Problems
 
 4. Plot histograms of the samples of r and K used for the simulation.
-#hist(KE)
-#hist(rE)
+```{r}
+hist(KE)
+hist(rE)
+```
 
 5. Plot a sample of 10 different trajectories from your ensemble (on one graph).
-#matplot(n[1:30,1:10], type='l', pch=1, xlab='Time', ylab='Population')
+```{r}
+matplot(n[1:30,1:10], type='l', pch=1, xlab='Time', ylab='Population')
+```
 
 6. Plot a histogram of your population forecast at time = 15.
-#hist(n[15,], breaks=40)
+```{r}
+hist(n[15,], breaks=40)
+```
 
 7. Plot the median trajectory and 95% CI.
-
+```{r}
+med<-apply(n,2,median)
+plot(med,type='l',ylim = c(0,12))
+ylo<-apply(n,2,quantile, c(0.025))
+yhi<-apply(n,2,quantile, c(0.975))
+ciEnvelope(1:30,ylo,yhi,col="lightgrey")
+par(new=TRUE)
+plot(med,type='l',ylim = c(0,12))
+```
 
 8. Add a 50% CI (i.e. 25% to 75%) to the plot. Note that you'll have to both compute the summary statistics for this interval and plot the envelope in a different color.
+```{r}
+med<-apply(n,2,median)
+plot(med,type='l',ylim = c(0,12))
+ylo<-apply(n,2,quantile, c(0.025))
+yhi<-apply(n,2,quantile, c(0.975))
+ciEnvelope(1:30,ylo,yhi,col="lightgrey")
+ylo2<-apply(n,2,quantile,c(.25))
+yhi2<-apply(n,2,quantile,c(0.75))
+ciEnvelope(1:30,ylo2,yhi2,col="lightblue")
+par(new=TRUE)
+plot(med,type='l',ylim = c(0,12))
+```
 
 Extra Credit: Initial conditions
 --------------------------------
@@ -256,8 +325,86 @@ for(i in 1:NE){
 ### Problems
 
 9. Plot the median & 95% interval.
+```{r}
+med<-apply(n,2,median)
+plot(med,type='l',ylim = c(0,12))
+ylo<-apply(n,2,quantile, c(0.025))
+yhi<-apply(n,2,quantile, c(0.975))
+ciEnvelope(1:30,ylo,yhi,col="lightgrey")
+par(new=TRUE)
+plot(med,type='l',ylim = c(0,12))
+
+```
 
 10. Repeat with r equal to 1.95, 2.05, and 2.8
+```{r}
+r=1.95
+n = matrix(n0s,NE,NT)
+for(i in 1:NE){
+  for(t in 2:NT){
+    n[i,t] = n[i,t-1] + r*n[i,t-1]*(1-n[i,t-1]/K)
+  }
+}
+med<-apply(n,2,median)
+plot(med,type='l',ylim = c(0,12))
+ylo<-apply(n,2,quantile, c(0.025))
+yhi<-apply(n,2,quantile, c(0.975))
+ciEnvelope(1:30,ylo,yhi,col="lightgrey")
+par(new=TRUE)
+plot(med,type='l',ylim = c(0,12))
+```
 
+```{r}
+r=2.05
+n = matrix(n0s,NE,NT)
+for(i in 1:NE){
+  for(t in 2:NT){
+    n[i,t] = n[i,t-1] + r*n[i,t-1]*(1-n[i,t-1]/K)
+  }
+}
+med<-apply(n,2,median)
+plot(med,type='l',ylim = c(0,12))
+ylo<-apply(n,2,quantile, c(0.025))
+yhi<-apply(n,2,quantile, c(0.975))
+ciEnvelope(1:30,ylo,yhi,col="lightgrey")
+par(new=TRUE)
+plot(med,type='l',ylim = c(0,12))
+```
 
+```{r}
+r=2.8
+n = matrix(n0s,NE,NT)
+for(i in 1:NE){
+  for(t in 2:NT){
+    n[i,t] = n[i,t-1] + r*n[i,t-1]*(1-n[i,t-1]/K)
+  }
+}
+med<-apply(n,2,median)
+plot(med,type='l',ylim = c(0,12))
+ylo<-apply(n,2,quantile, c(0.025))
+yhi<-apply(n,2,quantile, c(0.975))
+ciEnvelope(1:30,ylo,yhi,col="lightgrey")
+par(new=TRUE)
+plot(med,type='l',ylim = c(0,12))
 
+```
+```{r}
+log_curve<-function(r,ylo,yhi,col="lightgrey"){
+ n = matrix(n0s,NE,NT)
+ for(i in 1:NE){
+   for(t in 2:NT){
+      n[i,t] = n[i,t-1] + r*n[i,t-1]*(1-n[i,t-1]/K)
+                  }
+                }
+}
+med<-apply(n,2,median)
+plot(med,type='l')
+ylo<-apply(n,2,quantile, c(0.025))
+yhi<-apply(n,2,quantile, c(0.975))
+ciEnvelope(1:30,ylo,yhi,col="lightgrey")
+par(new=TRUE)
+plot(med,type='l')
+  
+}
+
+```
