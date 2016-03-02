@@ -62,7 +62,6 @@ For more information, please visit http://www.google.org/flutrends
 Using the US Forest Service's Forest Inventory and Analysis (FIA) data set, plot the rank vs log(abundance) curve for tree seedling counts from Rhode Island. Data is available at http://apps.fs.fed.us/fiadb-downloads/RI_SEEDLING.CSV and the relevant columns are TREECOUNT (raw seedling counts) and SPCD (species codes). 
 Hints: tapply, sum, na.rm=TRUE, sort, decreasing=TRUE, log='y'
 ```{r}
-fia=read.csv("http://apps.fs.fed.us/fiadb-downloads/RI_SEEDLING.CSV")
 abd<-tapply(fia$TREECOUNT,fia$SPCD,sum, na.rm=TRUE)
 s_abd<-sort(abd,decreasing=TRUE)
 log_s<-log(s_abd)
@@ -90,13 +89,10 @@ fia_table[which(update > "2016/01/01"),]
 **Question 2:**
 Create a sorted table of how many FLUXNET eddy-covariance towers are in each country according to the website at http://fluxnet.ornl.gov/site_status. Hint: use substring to extract the country code from the overall FLUXNET ID code.
 ```{r}
-flux<-getURL("http://fluxnet.ornl.gov/site_status")
-flux_table = readHTMLTable(flux)
-flux_read<-flux_table[]$status_table
-newyear<-as.numeric(levels(flux_read[,27]))[flux_read[,27]]
-place<-substring(flux_read[,2],1,2)
-flux_country<-tapply(newyear,place,sum, na.rm=TRUE)
-View(flux_country)
+flux_html <- getURL("http://apps.fs.fed.us/fiadb-downloads/datamart.html")
+flux_table = readHTMLTable(fia_html)
+
+
 ```
 
 grep, system, RegExp
@@ -141,7 +137,8 @@ system('grep -ir "fia" *.Rmd')
 Furthermore, often we want to capture the output of that command directly into R, which we can do using the `intern` flag:
 
 ```{r}
-
+fia.lines = system('grep -ir "fia" *.Rmd',intern=TRUE)
+fia.lines[1:3]
 ```
 
 Finally, it is also worth mentioning that R has its own, internal, version of grep that can be useful for searching and subsetting data and which also supports RegExp. Unlike the command-line version of grep, this function returns the row numbers matching the search string. In the example below we use the function readLines to read unstructured text in as vector of strings, one corresponding to each row in a file. It also demonstrates the function `sub`, which is related to grep but which substitutes the matching string rather than just finding it.
@@ -156,23 +153,19 @@ gsub("RI","VT",myCode[x])  ## substitute ALL: VT for RI
 
 
 **Question 3:** Within the object myCode, find all the lines that begin with the comment character, #.
-```{r}
-grep('^#',myCode)
-#a line(323) has a space before the #, so to include that it would be:
-grep('^ ? ? ?#',myCode)
-```
+
 
 netCDF, wget
 ------------
 
 In this section I want to introduce another command-line utility, wget, which can be used to pull files and content off the web, and to demonstrate how netCDF can be used in R. For this example we will be using data from the WLEF eddy-covariance tower located in northern Wisconsin. Unlike most flux towers, WLEF is a "tall-tower" -- it's actually a 440m TV antenna -- which means that it integrates over a much larger footprint than most towers. Indeed, the tower is instrumented at multiple heights. First, let's use wget to grab the data off the web. A few notes: 1) wget could be used from command line rather than as a system command;  2) if you don't have wget installed, use your web browser
 
-```
+```{r}
 system("wget http://flux.aos.wisc.edu/data/cheas/wlef/netcdf/US-PFa-WLEF-TallTowerClean-2012-L0-vFeb2013.nc")
 ```
 
 Next, lets open the file and look at what it contains
-```
+```{r}
 ## open the netCDF file
 wlef = nc_open("US-PFa-WLEF-TallTowerClean-2012-L0-vFeb2013.nc")
 print(wlef)    ## metadata
@@ -180,7 +173,7 @@ print(wlef)    ## metadata
 
 To start, lets look at the CO2 flux data, NEE_co2, which we see is stored in a matrix that has dimensions of [level2,time], where here level2 refers to the different measurements heights. If we want to grab this data and the vectors describing the dimensions we can do this as:
 
-```
+```{r}
 NEE = ncvar_get(wlef,"NEE_co2")    ## NEE data
 
 ## matrix dimensions
@@ -193,7 +186,7 @@ nc_close(wlef)
 
 Finally, we can plot the data at the different heights. Since this flux data is recorded hourly the raw data is a bit of a cloud, therefore we use the function `filter` to impose a 24 hour moving window, which is indicated in the function as a vector of 24 weights, each given an equal weight of 1/24. 
 
-```
+```{r}
 ## print fluxes at 3 different heights
 for(i in 1:3){
 plot(doy,filter(NEE[i,],rep(1/24,24)),type='l',main=paste("Height =",height[i],"m"))
@@ -202,7 +195,7 @@ plot(doy,filter(NEE[i,],rep(1/24,24)),type='l',main=paste("Height =",height[i],"
 
 Alternative, if I just wanted to get a subset of air temperature data (e.g. 24 hours of data from the top height for the 220th day of the year)
 
-```
+```{r}
 start = which(doy > 220)[1]
 wlef = nc_open("US-PFa-WLEF-TallTowerClean-2012-L0-vFeb2013.nc")
 TA = ncvar_get(wlef,"TA",c(3,start),c(1,24))
@@ -215,11 +208,7 @@ nc_close(wlef)
 **Question 4:** 
 
 Similar to how we can point read.csv to the URL of a text file, you can open and manipulate netCDF files on remote servers if those servers support THREDDS/OpenDAP. Furthermore, these utilities let you grab just the part of the file that you need rather than the file in it's entirety. Using this approach, download and plot the air temperature data for Boston for 2004 that's located on the ORNL DAAC server `http://thredds.daac.ornl.gov/thredds/dodsC/ornldaac/1220/mstmip_driver_global_hd_climate_tair_2004_v1.nc4`.  The underlying file is quite large so make sure to grab just the subset you need. To do so you'll need to first grab the lat, lon, and time variables to find _which_ grid cell to grab for lat and lon and how many values to grab from time (i.e. _length_). 
-```
-#Warning message:
-#running command 'wget #http://flux.aos.wisc.edu/data/cheas/wlef/netcdf/US-PFa-WLEF-TallTowerClean-2012-L0-vF#eb2013.nc' had status 127 
-#I have a windows computer
-```
+
 
 SOAP
 ----
@@ -260,10 +249,7 @@ time = as.Date(substr(MODIS[,10],1,7),format="%Y%j")
 ```
 
 **Question 5:** Plot EVI versus time and compare to the CO2 flux observations.
-```{r}
-plot(time,EVI,xlab="Time")
-#do not have CO2 flux observations
-```
+
 cron
 ----
 
@@ -298,29 +284,4 @@ Imagine you are working with the full FIA database and want to ensure that the d
 * Write out the pseudocode/outline for how to keep the files up to date
 * Write out what the cron table would look like to schedule this job (assume the update only needs to be done weekly)
 
-```
-##psuedocode##
-#pull data originally
-  find data in system
-  download data to system
-  save path for cron table to use
-#set cron table
-  determine path and final destination
-  create path
-  set table
-#updating
- find the max data for each data entry
-  #assuming update time is supplied
- update data for all data entrys with a max date between my last update and theirs
-
-#cron
-MAILTO=brennas@bu.edu
-* 23 * * sun /home/'file_name path'/'program'
-
-
-crontab( e, HOME="Brenna'sEF_Activities",
-         MAILTO=brennas@bu.edu
-         * 23 * * sun /home/'file_name path'/'program'
-         )
-```
 
