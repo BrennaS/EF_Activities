@@ -93,7 +93,7 @@ ciEnvelope <- function(x,ylo,yhi,...){
 out <- as.matrix(jags.out)
 ci <- apply(exp(out[,3:ncol(out)]),2,quantile,c(0.025,0.5,0.975))
 
-plot(time,ci[2,],type='n',ylim=range(y,na.rm=TRUE),ylab="Flu Index",log='y',xlim=time[time.rng])
+plot(time,ci[2,],type='n',ylim=range(y,na.rm=TRUE),ylab="FluIndex",log='y',xlim=time[time.rng])
 ## adjust x-axis label to be monthly if zoomed
 if(diff(time.rng) < 100){ 
   axis.Date(1, at=seq(time[time.rng[1]],time[time.rng[2]],by='month'), format = "%Y-%m")
@@ -117,10 +117,194 @@ Assignment:
 To look at how observation frequency affects data assimilation, convert 3 out of every 4 observations to NA (i.e. treat the data as approximately monthly) and refit the model. 
 
 * Generate a time-series plot for the CI of x that includes the observations (as above). Use a different color and symbol to differentiate observations that were included in the model versus those that were converted to NA's.
-* Compare the CI between the two runs.
-* Generate a predicted (median) vs observed plot for the data points that were removed
-* Comment on the accuracy and precision of the estimates.
+```{r}
+library(rjags)
 
+gflu = read.csv("http://www.google.org/flutrends/about/data/flu/us/data.txt",skip=11)
+time = as.Date(gflu$Date)
+y = gflu$Massachusetts
+plot(time,y,type='l',ylab="Flu Index",lwd=2,log='y')
+
+even<-seq(2,620, by=2)
+fourth<-seq(1,620, by=4)
+need.replace<-c(even, fourth)
+
+time2<- replace(gflu$Date,need.replace,NA)
+time2_rem<-na.omit(time2)
+time2_date=as.Date(time2_rem)
+
+y.new<-replace(gflu$Massachusetts,need.replace,NA)
+y.new<-as.numeric(na.omit(y.new))
+plot(time2_date,y.new,type='l',ylab="Flu Index",lwd=2,log='y')
+
+
+RandomWalk = "
+model{
+
+#### Data Model
+for(i in 1:n){
+y.new[i] ~ dnorm(x[i],tau_obs)
+}
+
+#### Process Model
+for(i in 2:n){
+x[i]~dnorm(x[i-1],tau_add)
+}
+
+#### Priors
+x[1] ~ dnorm(x_ic,tau_ic)
+tau_obs ~ dgamma(a_obs,r_obs)
+tau_add ~ dgamma(a_add,r_add)
+}
+"
+
+data <- list(y.new=log(y.new),n=length(y.new),x_ic=log(1000),tau_ic=100,a_obs=1,r_obs=1,a_add=1,r_add=1)
+
+nchain = 3
+init <- list()
+for(i in 1:nchain){
+  y.samp.new = sample(y.new,length(y.new),replace=TRUE)
+  init[[i]] <- list(tau_add=1/var(diff(log(y.samp.new)),na.rm=TRUE),tau_obs=5/var(log(y.samp.new),na.rm=TRUE))
+}
+
+j.model   <- jags.model (file = textConnection(RandomWalk),
+                         data = data,
+                         inits = init,
+                         n.chains = 3)
+
+## burn-in
+jags.out   <- coda.samples (model = j.model,
+                            variable.names = c("tau_add","tau_obs"),
+                            n.iter = 1000)
+plot(jags.out)
+
+jags.out   <- coda.samples (model = j.model,
+                            variable.names = c("x","tau_add","tau_obs"),
+                            n.iter = 10000)
+
+time.rng = c(1,length(time2_date)) ## adjust to zoom in and out
+ciEnvelope <- function(x,ylo,yhi,...){
+  polygon(cbind(c(x, rev(x), x[1]), c(ylo, rev(yhi),
+                                      ylo[1])), border = NA,...) 
+}
+out.new <- as.matrix(jags.out)
+ci.new <- apply(exp(out.new[,3:ncol(out.new)]),2,quantile,c(0.025,0.5,0.975))
+
+plot(time2_date,ci.new[2,],type='n',ylim=range(y.new,na.rm=TRUE),ylab="Flu Index",log='y',xlim=time2_date[time.rng])
+
+
+
+
+## adjust x-axis label to be monthly if zoomed
+if(diff(time.rng) < 100){ 
+  axis.Date(1, at=seq(time2_date[time.rng[1]],time2_date[time.rng[2]],by='month'), format = "%Y-%m")
+}
+
+ciEnvelope(time2_date,ci.new[1,],ci.new[3,],col="lightBlue")
+
+points(time2_date,y.new,pch="+",cex=0.8,col="red")
+
+points(time,y,pch="-",cex=0.5)
+```
+
+* Compare the CI between the two runs.
+```{r}
+plot(time2_date,ci.new[2,],type='n',ylim=range(y.new,na.rm=TRUE),ylab="Flu Index",log='y',xlim=time2_date[time.rng],xlab="Time")
+ciEnvelope(time2_date,ci.new[1,],ci.new[3,],col="lightBlue")
+
+RandomWalk = "
+model{
+
+#### Data Model
+for(i in 1:n){
+y[i] ~ dnorm(x[i],tau_obs)
+}
+
+#### Process Model
+for(i in 2:n){
+x[i]~dnorm(x[i-1],tau_add)
+}
+
+#### Priors
+x[1] ~ dnorm(x_ic,tau_ic)
+tau_obs ~ dgamma(a_obs,r_obs)
+tau_add ~ dgamma(a_add,r_add)
+}
+"
+data <- list(y=log(y),n=length(y),x_ic=log(1000),tau_ic=100,a_obs=1,r_obs=1,a_add=1,r_add=1)
+init_old <- list()
+for(i in 1:nchain){
+  y.samp_old = sample(y,length(y),replace=TRUE)
+  init_old[[i]] <- list(tau_add=1/var(diff(log(y.samp_old))),tau_obs=5/var(log(y.samp_old)))
+}
+j.model_old   <- jags.model (file = textConnection(RandomWalk),
+                         data = data,
+                         inits = init_old,
+                         n.chains = 3)
+jags.out_old   <- coda.samples (model = j.model_old,
+                            variable.names = c("x","tau_add","tau_obs"),
+                            n.iter = 10000) 
+out_old <- as.matrix(jags.out_old)
+ci_old <- apply(exp(out_old[,3:ncol(out_old)]),2,quantile,c(0.025,0.5,0.975))
+
+ciEnvelope(time,ci_old[1,],ci_old[3,],col="grey")
+
+```
+```
+The CI of the orginal plot, which had more data points, was tighter, as makes sense with better data.
+
+```
+* Generate a predicted (median) vs observed plot for the data points that were removed
+##plot obs(y) on x axis and predicted median(ci[2,]) on yaxis
+```{r}
+used<-seq(1,620, by=4)
+
+y.unused<-replace(gflu$Massachusetts,used,NA)
+y.unused<-as.numeric(na.omit(y.unused))
+init_unused <- list()
+for(i in 1:nchain){
+  y.samp.unused = sample(y.unused,length(y.unused),replace=TRUE)
+  init_unused[[i]] <- list(tau_add=1/var(diff(log(y.samp.unused)),na.rm=TRUE),tau_obs=5/var(log(y.samp.unused),na.rm=TRUE))
+}
+RandomWalk = "
+model{
+
+#### Data Model
+for(i in 1:n){
+y.unused[i] ~ dnorm(x[i],tau_obs)
+}
+
+#### Process Model
+for(i in 2:n){
+x[i]~dnorm(x[i-1],tau_add)
+}
+
+#### Priors
+x[1] ~ dnorm(x_ic,tau_ic)
+tau_obs ~ dgamma(a_obs,r_obs)
+tau_add ~ dgamma(a_add,r_add)
+}
+"
+data <- list(y.unused=log(y.unused),n=length(y.unused),x_ic=log(1000),tau_ic=100,a_obs=1,r_obs=1,a_add=1,r_add=1)
+j.model_unused   <- jags.model (file = textConnection(RandomWalk),
+                         data = data,
+                         inits = init_unused,
+                         n.chains = 3)
+jags.out_unused   <- coda.samples (model = j.model_unused,
+                            variable.names = c("x","tau_add","tau_obs"),
+                            n.iter = 10000)
+out.unused <- as.matrix(jags.out_unused)
+ci.unused <- apply(exp(out.unused[,3:ncol(out.unused)]),2,quantile,c(0.025,0.5,0.975))
+
+plot(y.unused,ci.unused[2,],xlab="observed values", ylab="predicted values")
+abline(0,1, cex=0.5)
+
+```
+* Comment on the accuracy and precision of the estimates.
+```
+The accuracy and precision are both very high. This may have to do with the fact that there were so many data points to work with
+
+```
 Extra Credit:
 -------------
 
